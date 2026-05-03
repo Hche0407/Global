@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kaffe & Chelitas — Sistema de Gestión</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:#f0f2f5;color:#222;min-height:100vh;}
+.topbar{background:#1a1a2e;color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.topbar h1{font-size:18px;font-weight:700;}
+.tasa-box{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border-radius:8px;padding:7px 14px;}
+.tasa-box label{font-size:13px;color:#ccc;white-space:nowrap;}
+.tasa-box input{width:110px;font-size:15px;font-weight:700;border:none;background:transparent;color:#fff;outline:none;}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e0e0e0;padding:0 24px;gap:4px;}
+.tab{padding:12px 20px;cursor:pointer;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap;}
+.tab.active{color:#1a1a2e;border-bottom-color:#1a1a2e;}
+.tab:hover{color:#1a1a2e;}
+.page{display:none;max-width:980px;margin:20px auto;padding:0 16px;}
+.page.active{display:block;}
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);padding:20px 24px;margin-bottom:18px;}
+.card-title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:14px;}
+.search-wrap{position:relative;}
+.search-wrap input{width:100%;padding:11px 16px;font-size:15px;border:1.5px solid #ddd;border-radius:8px;outline:none;transition:border .2s;}
+.search-wrap input:focus{border-color:#1a1a2e;}
+.dropdown{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #ddd;border-top:none;border-radius:0 0 8px 8px;z-index:300;max-height:260px;overflow-y:auto;box-shadow:0 4px 14px rgba(0,0,0,.1);}
+.dd-item{padding:9px 16px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f0f0f0;gap:8px;}
+.dd-item:last-child{border-bottom:none;}
+.dd-item:hover,.dd-item.active{background:#f0f4ff;}
+.dd-item .dname{flex:1;color:#222;}
+.dd-item .dstock{font-size:12px;padding:2px 8px;border-radius:10px;white-space:nowrap;font-weight:600;}
+.dd-item .dprice{font-size:12px;color:#666;white-space:nowrap;}
+.stock-ok{background:#e6f9f0;color:#1a7a4a;}
+.stock-min{background:#fff4e0;color:#a06000;}
+.stock-no{background:#ffe5e5;color:#cc0000;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{text-align:left;padding:9px 10px;background:#f7f7f7;color:#555;font-weight:700;border-bottom:2px solid #eee;white-space:nowrap;}
+tbody td{padding:9px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#fafafa;}
+.qty-inp{width:60px;font-size:13px;text-align:center;border:1px solid #ddd;border-radius:6px;padding:5px;}
+.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:opacity .15s;}
+.btn:hover{opacity:.85;}
+.btn-dark{background:#1a1a2e;color:#fff;}
+.btn-green{background:#1a7a4a;color:#fff;}
+.btn-red{background:#cc0000;color:#fff;}
+.btn-gray{background:#eee;color:#555;}
+.btn-orange{background:#e07b00;color:#fff;}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.remove-btn{background:none;border:none;cursor:pointer;color:#bbb;font-size:16px;padding:2px 8px;border-radius:5px;}
+.remove-btn:hover{background:#ffe5e5;color:#cc0000;}
+.totals-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;}
+.total-card{background:#f7f7f7;border-radius:10px;padding:12px 16px;}
+.total-card .lbl{font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
+.total-card .amt{font-size:24px;font-weight:700;color:#1a1a2e;}
+.actions-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+.empty-msg{text-align:center;padding:2.5rem;color:#aaa;font-size:14px;}
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;}
+.badge-ok{background:#e6f9f0;color:#1a7a4a;}
+.badge-min{background:#fff4e0;color:#a06000;}
+.badge-no{background:#ffe5e5;color:#cc0000;}
+.alert-box{border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:13px;font-weight:600;}
+.alert-min{background:#fff4e0;color:#a06000;border-left:4px solid #e07b00;}
+.alert-no{background:#ffe5e5;color:#cc0000;border-left:4px solid #cc0000;}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px;}
+.stat-card{background:#fff;border-radius:10px;padding:14px 18px;box-shadow:0 2px 6px rgba(0,0,0,.06);}
+.stat-card .slbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.stat-card .sval{font-size:22px;font-weight:700;color:#1a1a2e;}
+.stat-card .ssub{font-size:12px;color:#666;margin-top:2px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.form-row.one{grid-template-columns:1fr;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.4px;}
+.form-group input,.form-group select{padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;outline:none;transition:border .2s;}
+.form-group input:focus,.form-group select:focus{border-color:#1a1a2e;}
+.inv-search{display:flex;gap:10px;margin-bottom:14px;}
+.inv-search input{flex:1;padding:9px 14px;font-size:14px;border:1.5px solid #ddd;border-radius:8px;outline:none;}
+.inv-search input:focus{border-color:#1a1a2e;}
+.hint{font-size:12px;color:#aaa;margin-top:6px;}
+.section-sep{height:1px;background:#eee;margin:16px 0;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:#fff;border-radius:14px;padding:28px;width:460px;max-width:95vw;box-shadow:0 8px 30px rgba(0,0,0,.2);}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:18px;color:#1a1a2e;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+.compra-item-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:13px;}
+.compra-item-row input{flex:1;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;}
+.month-label{font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:10px;}
+@media print{.tabs,.topbar,.actions-row,.remove-btn,.btn,.search-wrap,.modal-bg{display:none!important;}body{background:#fff;}.page{display:block!important;}.card{box-shadow:none;border:1px solid #ddd;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>☕ Kaffe &amp; Chelitas — Sistema de Gestión</h1>
+  <div class="tasa-box">
+    <label>Tasa BCV: 1$ =</label>
+    <input type="number" id="tasa" value="481.22" step="0.01" min="0.01"/>
+    <span style="font-size:13px;color:#ccc;">Bs.</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showPage('venta')">🛒 Punto de Venta</div>
+  <div class="tab" onclick="showPage('inventario')">📦 Inventario</div>
+  <div class="tab" onclick="showPage('compras')">🛍️ Registrar Compra</div>
+  <div class="tab" onclick="showPage('reportes')">📊 Reportes del Mes</div>
+  <div class="tab" onclick="showPage('alertas')">🔔 Alertas</div>
+  <div class="tab" onclick="showPage('tarjetas')">💳 Reporte Tarjetas</div>
+</div>
+
+<!-- ========== PÁGINA VENTA ========== -->
+<div id="page-venta" class="page active">
+  <div class="card">
+    <div class="card-title">Buscar producto</div>
+    <div class="search-wrap">
+      <input type="text" id="v-search" placeholder="Escribe el nombre del producto..." autocomplete="off"/>
+      <div class="dropdown" id="v-dropdown" style="display:none;"></div>
+    </div>
+    <p class="hint">Los productos sin existencia no se pueden agregar.</p>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+      <span class="card-title" style="margin:0;">Productos seleccionados</span>
+    </div>
+    <div id="v-cart-content"><div class="empty-msg">Busca un producto arriba para agregarlo.</div></div>
+  </div>
+  <div class="card" id="v-totals-card" style="display:none;">
+    <div class="card-title">Total de la venta</div>
+    <div class="totals-grid">
+      <div class="total-card"><div class="lbl">Total en dólares</div><div class="amt" id="v-total-usd">$0.00</div></div>
+      <div class="total-card"><div class="lbl">Total en bolívares</div><div class="amt" id="v-total-bs">Bs. 0</div></div>
+    </div>
+    <div class="actions-row">
+      <button class="btn btn-green" onclick="confirmarVenta()">✔ Confirmar venta y descontar inventario</button>
+      <button class="btn btn-gray" onclick="clearVenta()">🗑 Limpiar</button>
+      <button class="btn btn-dark" onclick="window.print()">🖨 Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PÁGINA INVENTARIO ========== -->
+<div id="page-inventario" class="page">
+
+  <!-- Toolbar -->
+  <div class="card" style="margin-bottom:14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+      <span class="card-title" style="margin:0;">Inventario actual</span>
+      <button class="btn btn-green" onclick="abrirModalNuevoProducto()">+ Nuevo producto</button>
+    </div>
+    <!-- Filtros básicos -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <input type="text" id="inv-filter" placeholder="Buscar por nombre..." style="flex:1;min-width:160px;padding:8px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none;" oninput="renderInventario()"/>
+      <select id="inv-estado" onchange="renderInventario()" style="padding:8px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none;">
+        <option value="">Todos los estados</option>
+        <option value="ok">Con existencia normal</option>
+        <option value="min">Existencia mínima</option>
+        <option value="no">Sin existencia</option>
+      </select>
+    </div>
+    <!-- Filtro por rango -->
+    <div style="background:#f7f7f7;border-radius:10px;padding:12px 16px;">
+      <div style="font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;">Filtrar por rango</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end;">
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px;">Stock actual — desde</div>
+          <input type="number" id="inv-stock-min" placeholder="0" min="0" style="width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;outline:none;" oninput="renderInventario()"/>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px;">Stock actual — hasta</div>
+          <input type="number" id="inv-stock-max" placeholder="Sin límite" min="0" style="width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;outline:none;" oninput="renderInventario()"/>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px;">Stock mínimo — desde</div>
+          <input type="number" id="inv-smin-min" placeholder="0" min="0" style="width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;outline:none;" oninput="renderInventario()"/>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px;">Stock mínimo — hasta</div>
+          <input type="number" id="inv-smin-max" placeholder="Sin límite" min="0" style="width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;outline:none;" oninput="renderInventario()"/>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-gray btn-sm" onclick="limpiarFiltrosInv()">Limpiar filtros</button>
+          <button class="btn btn-dark btn-sm" onclick="imprimirInventario()">🖨 Imprimir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Totales superiores -->
+  <div id="inv-totales" style="margin-bottom:14px;"></div>
+
+  <!-- Tabla -->
+  <div class="card">
+    <div id="inv-resumen" style="margin-bottom:10px;"></div>
+    <div id="inv-table-wrap"></div>
+  </div>
+</div>
+
+<!-- Modal agregar / editar producto -->
+<div class="modal-bg" id="modal-producto">
+  <div class="modal" style="width:480px;">
+    <h2 id="modal-producto-title">Nuevo producto</h2>
+    <div class="form-row one" style="margin-bottom:12px;">
+      <div class="form-group"><label>Nombre del producto</label><input type="text" id="mp-nombre" placeholder="Ej: COCA-COLA PET. X 2lts."/></div>
+    </div>
+    <div class="form-row" style="margin-bottom:12px;">
+      <div class="form-group"><label>Precio de venta ($)</label><input type="number" id="mp-precio" placeholder="0.00" step="0.01" min="0"/></div>
+      <div class="form-group"><label>Costo del producto ($)</label><input type="number" id="mp-costo" placeholder="0.00" step="0.01" min="0" oninput="calcPrecioSugeridoModal()"/></div>
+    </div>
+    <div class="form-row" style="margin-bottom:12px;">
+      <div class="form-group">
+        <label>Margen de ganancia (%)</label>
+        <input type="number" id="mp-margen" placeholder="40" step="0.1" min="0" value="40" oninput="calcPrecioSugeridoModal()"/>
+      </div>
+      <div class="form-group">
+        <label>Precio sugerido con margen</label>
+        <input type="number" id="mp-precio-sug" placeholder="Se calcula automático" step="0.01" min="0" style="background:#f0faf5;" readonly/>
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:4px;">
+      <div class="form-group"><label>Stock inicial</label><input type="number" id="mp-stock" placeholder="0" min="0"/></div>
+      <div class="form-group"><label>Stock mínimo</label><input type="number" id="mp-min" placeholder="0" min="0"/></div>
+    </div>
+    <input type="hidden" id="mp-idx" value="-1"/>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('modal-producto')">Cancelar</button>
+      <button class="btn btn-green" id="mp-btn-guardar" onclick="guardarProducto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirmar eliminación -->
+<div class="modal-bg" id="modal-eliminar">
+  <div class="modal" style="width:400px;">
+    <h2>Eliminar producto</h2>
+    <p style="font-size:14px;color:#555;margin-bottom:6px;">¿Estás seguro que deseas eliminar este producto?</p>
+    <p id="modal-eliminar-nombre" style="font-size:14px;font-weight:700;color:#cc0000;margin-bottom:4px;"></p>
+    <p style="font-size:12px;color:#aaa;">Esta acción no se puede deshacer.</p>
+    <input type="hidden" id="eliminar-idx" value="-1"/>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('modal-eliminar')">Cancelar</button>
+      <button class="btn btn-red" onclick="ejecutarEliminar()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PÁGINA COMPRAS ========== -->
+<div id="page-compras" class="page">
+  <div class="card">
+    <div class="card-title">Datos de la compra</div>
+    <div class="form-row">
+      <div class="form-group"><label>Proveedor</label><input type="text" id="c-proveedor" placeholder="Nombre del proveedor"/></div>
+      <div class="form-group"><label>N° de Factura</label><input type="text" id="c-factura" placeholder="Ej: 0001-0023456"/></div>
+    </div>
+    <div class="form-row one">
+      <div class="form-group"><label>Tasa del día (Bs. por $)</label><input type="number" id="c-tasa-dia" placeholder="481.22" step="0.01" min="0.01" oninput="calcMontoBs()"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Monto total en dólares ($)</label><input type="number" id="c-monto-usd" placeholder="0.00" step="0.01" min="0" oninput="calcMontoBs()"/></div>
+      <div class="form-group"><label>Monto total en bolívares (Bs.) <span style="font-size:11px;color:#1a7a4a;font-weight:600;">— se calcula automatico</span></label><input type="number" id="c-monto-bs" placeholder="Se calcula al ingresar $ y tasa" step="0.01" min="0" style="background:#f0faf5;"/></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Productos recibidos</div>
+    <div class="search-wrap" style="margin-bottom:12px;">
+      <input type="text" id="c-search" placeholder="Buscar producto para agregar..." autocomplete="off"/>
+      <div class="dropdown" id="c-dropdown" style="display:none;"></div>
+    </div>
+    <div id="c-items-wrap"><div class="empty-msg">Agrega los productos recibidos en esta compra.</div></div>
+    <div class="actions-row" style="margin-top:14px;">
+      <button class="btn btn-green" onclick="confirmarCompra()">✔ Registrar compra y actualizar inventario</button>
+      <button class="btn btn-gray" onclick="clearCompra()">🗑 Limpiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PÁGINA REPORTES ========== -->
+<div id="page-reportes" class="page">
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+      <span class="card-title" style="margin:0;">Resumen del mes</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="r-mes" onchange="renderReportes()" style="padding:7px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none;"></select>
+        <button class="btn btn-dark btn-sm" onclick="window.print()">🖨 Imprimir</button>
+      </div>
+    </div>
+    <div id="r-stats" class="stat-grid"></div>
+    <div class="section-sep"></div>
+    <div id="r-ventas-wrap"></div>
+    <div class="section-sep"></div>
+    <div id="r-compras-wrap"></div>
+  </div>
+</div>
+
+<!-- ========== PÁGINA ALERTAS ========== -->
+<div id="page-alertas" class="page">
+  <div class="card">
+    <div class="card-title">🔔 Alertas de inventario</div>
+    <div id="alertas-wrap"></div>
+  </div>
+</div>
+
+<!-- ========== PÁGINA TARJETAS ========== -->
+<div id="page-tarjetas" class="page">
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+      <span class="card-title" style="margin:0;">💳 Reporte de pagos con tarjeta</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="t-mes" onchange="renderTarjetas()" style="padding:7px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none;"></select>
+        <select id="t-tipo" onchange="renderTarjetas()" style="padding:7px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none;">
+          <option value="">Débito y crédito</option>
+          <option value="debito">Solo débito</option>
+          <option value="credito">Solo crédito</option>
+        </select>
+        <button class="btn btn-dark btn-sm" onclick="window.print()">🖨 Imprimir</button>
+      </div>
+    </div>
+    <div id="t-stats" class="stat-grid" style="margin-bottom:16px;"></div>
+    <div id="t-table-wrap"></div>
+  </div>
+</div>
+
+<!-- Modal confirmación venta -->
+<div class="modal-bg" id="modal-venta">
+  <div class="modal" style="width:520px;">
+    <h2>Confirmar venta</h2>
+    <div id="modal-venta-resumen" style="font-size:13px;color:#333;margin-bottom:12px;max-height:160px;overflow-y:auto;"></div>
+
+    <!-- Desglose IVA -->
+    <div style="background:#f7f7f7;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px;" id="modal-iva-box"></div>
+
+    <!-- Forma de pago -->
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;">Forma de pago</label>
+      <select id="pago-tipo" onchange="onPagoTipoChange()" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;outline:none;">
+        <option value="">-- Selecciona --</option>
+        <option value="bs">Bolívares en efectivo</option>
+        <option value="usd">Dólares en efectivo</option>
+        <option value="mezcla">Mezcla (Bs. + $)</option>
+        <option value="debito">Tarjeta de débito</option>
+        <option value="credito">Tarjeta de crédito</option>
+      </select>
+    </div>
+
+    <div id="pago-extra" style="margin-bottom:12px;"></div>
+    <div id="pago-vuelto" style="margin-bottom:8px;"></div>
+
+    <!-- Alertas stock -->
+    <div id="modal-alertas-stock"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('modal-venta')">Cancelar</button>
+      <button class="btn btn-green" onclick="ejecutarVenta()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirmación compra -->
+<div class="modal-bg" id="modal-compra">
+  <div class="modal">
+    <h2>Confirmar compra</h2>
+    <div id="modal-compra-resumen" style="font-size:13px;color:#333;margin:12px 0;max-height:200px;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('modal-compra')">Cancelar</button>
+      <button class="btn btn-green" onclick="ejecutarCompra()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const productos = [
+  {name:'AGUA MINERAL c/. GAS X 500 ML. MINALBA', price:1.95, stock:48, min:12},
+  {name:'AGUA MINERAL X 1 1/2 Litros', price:2.75, stock:12, min:3},
+  {name:'AGUA MINERAL X 355 ml. MINALBA Y NEVADA', price:1.1, stock:0, min:0},
+  {name:'AGUA MINERAL X 355 ml. NEVADA C/. GAS', price:1.25, stock:0, min:0},
+  {name:'AGUA MINERAL X 600 ml MINALBA Y NEVADA', price:1.5, stock:0, min:0},
+  {name:'BOLIGRAFO KILOMETRICO', price:0.3, stock:0, min:0},
+  {name:'BUBALOO CHICLE SURT.', price:0.2, stock:0, min:0},
+  {name:'CACHITOS DE JAMON Y QUESO (HOJALDRE)', price:3.25, stock:0, min:0},
+  {name:'CACHITOS DE PAN (JAMON Y QUESO)', price:2.5, stock:0, min:0},
+  {name:'CACHITOS DE PAN (JAMON Y QUESO CREMA)', price:2.5, stock:0, min:0},
+  {name:'CACHITOS DE PAN (JAMON Y TOCINETA)', price:2.5, stock:0, min:0},
+  {name:'CACHITOS DE PAN (JAMON)', price:2.5, stock:0, min:0},
+  {name:'CACHITOS DE QUESO (HOJALDRE)', price:3.25, stock:0, min:0},
+  {name:'CAFE FRIO NESCAFE', price:3.5, stock:0, min:0},
+  {name:'CARAMELOS BIANCHI X 1 AZUL', price:0.15, stock:0, min:0},
+  {name:'CARAMELOS CHAO X 1', price:0.1, stock:0, min:0},
+  {name:'CARAMELOS DE CAFE', price:0.25, stock:0, min:0},
+  {name:'CARAMELOS HALLS SURT. X 1 UD.', price:0.2, stock:0, min:0},
+  {name:'CARAMELOS MENTA HELADA X 1', price:0.1, stock:0, min:0},
+  {name:'CHAO LINEA SURTD. X 14 GRS.', price:0.35, stock:48, min:24},
+  {name:'CHICLETS ADAMS X 2', price:0.15, stock:0, min:0},
+  {name:'CHINOTTO PET. X 355 ML.', price:1.0, stock:0, min:0},
+  {name:'CHUPETA BBB', price:0.35, stock:0, min:0},
+  {name:'COCA-COLA LATA (UVA,CHINOTTO,ORIG. S/AZUC.)', price:1.75, stock:0, min:0},
+  {name:'COCA-COLA PET. X 1 1/2 lts.', price:2.0, stock:0, min:0},
+  {name:'COCA-COLA PET. X 1 lts. (TORONJA)', price:1.5, stock:0, min:0},
+  {name:'COCA-COLA PET. X 2lts.', price:2.75, stock:0, min:0},
+  {name:'COCA-COLA PET. X 355 ML. (BOMBONITA)', price:1.0, stock:0, min:0},
+  {name:'COCA-COLA (VASO GRANDE)', price:1.75, stock:0, min:0},
+  {name:'COCA-COLA (VASO MEDIANO)', price:1.5, stock:0, min:0},
+  {name:'COCA-COLA (VASO PEQUENO)', price:1.2, stock:0, min:0},
+  {name:'COCOSET X 50 GRS.', price:1.75, stock:0, min:0},
+  {name:'CRI-CRI CHOCOLATE X 27 GRS.', price:2.5, stock:0, min:0},
+  {name:'CRI-CRI CHOCOLATE X 60 GRS.', price:4.4, stock:0, min:0},
+  {name:'DANDY X 19 GRS.', price:1.25, stock:0, min:0},
+  {name:'DEL VALLE JUGO DE NARANJA X 250 ML', price:1.25, stock:0, min:0},
+  {name:'DELIGHT CHOCOLATE X 30 GRS.', price:2.5, stock:0, min:0},
+  {name:'EMPANADAS FRITAS CON PAPA Y QUESO', price:0.95, stock:0, min:0},
+  {name:'EMPANADAS FRITAS CON POLLO', price:1.5, stock:0, min:0},
+  {name:'EMPANADAS FRITAS CON CARNE MECHADA', price:1.5, stock:0, min:0},
+  {name:'EMPANADAS INTEGRALES DE POLLO (HORNEADAS)', price:3.25, stock:0, min:0},
+  {name:'EMPANADAS INTEGRALES DE RICOTTA CON MAIZ', price:3.25, stock:0, min:0},
+  {name:'FANTA NARANJA PET. X 355 ML.', price:1.0, stock:0, min:0},
+  {name:'FANTA UVA PET. X 355 ML.', price:1.0, stock:0, min:0},
+  {name:'FLAQUITOS ST. MORITZ', price:1.25, stock:0, min:0},
+  {name:'FLIPS X 120 GRS. SURTIDOS', price:3.8, stock:0, min:0},
+  {name:'FLIPS X 28 GRS. CHOC. Y D.LECHE', price:1.5, stock:0, min:0},
+  {name:'FRUNAS X 1', price:0.5, stock:0, min:0},
+  {name:'FRUTOS SECOS X 100 GRS.', price:1.5, stock:0, min:0},
+  {name:'GALAK X 30 GRS.', price:2.5, stock:0, min:0},
+  {name:'GALL. BELVITA HONEY', price:0.7, stock:0, min:0},
+  {name:'GALL. BELVITA KRAKER', price:0.7, stock:0, min:0},
+  {name:'GALL. CHARMY SURT. X 1', price:0.35, stock:0, min:0},
+  {name:'GALL. CHIPS AHOY MINI', price:2.45, stock:0, min:0},
+  {name:'GALL. CHIPS AHOY X 2 GALL.', price:1.2, stock:0, min:0},
+  {name:'GALL. CLUB SOCIAL', price:0.7, stock:0, min:0},
+  {name:'GALL. CLUB SOCIAL INTEGRAL', price:0.7, stock:0, min:0},
+  {name:'GALL. CLUB SOCIAL INTG. CEREALES', price:0.7, stock:0, min:0},
+  {name:'GALL. DE SODA', price:0.4, stock:0, min:0},
+  {name:'GALL. FESTIVAL SURTIDAS', price:0.95, stock:0, min:0},
+  {name:'GALL. MARIA MINI', price:0.6, stock:0, min:0},
+  {name:'GALL. MARIA ORIGINAL', price:0.5, stock:0, min:0},
+  {name:'GALL. OREO TUBO X 96 GRS.', price:2.75, stock:0, min:0},
+  {name:'GALL. OREO X 32 GRS.', price:0.95, stock:0, min:0},
+  {name:'GALL. OREO X 6 X 48 GRS.', price:1.35, stock:0, min:0},
+  {name:'GALLETAS DE HUEVO X 3', price:0.75, stock:0, min:0},
+  {name:'GATORADE X 500 CC SURTIDOS', price:2.5, stock:0, min:0},
+  {name:'GRANJERO (POLLO CRISPY, QUESO CHEDDAR)', price:3.5, stock:0, min:0},
+  {name:'HALLS BARRA SURTIDOS', price:1.45, stock:0, min:0},
+  {name:'HAMBURGUESA MINI BREAK UNIDAD', price:2.4, stock:0, min:0},
+  {name:'HAMBURGUESA PRO UNIDAD', price:3.2, stock:0, min:0},
+  {name:'ICE COFFE', price:4.25, stock:0, min:0},
+  {name:'JUGO DE MANZANA X 250 ML. YUKIPAK', price:1.5, stock:0, min:0},
+  {name:'JUGO DE NARANJA CON HIELO', price:2.75, stock:0, min:0},
+  {name:'JUGO DE NARANJA SIN HIELO', price:3.75, stock:0, min:0},
+  {name:'JUGO YUKERY X 250 ML. (NARANJA,PERA,DURAZNO)', price:1.75, stock:0, min:0},
+  {name:'KIT CUBIERTOS', price:0.7, stock:0, min:0},
+  {name:'KIT KAT BARRA', price:2.5, stock:0, min:0},
+  {name:'KIT SERVILLETAS', price:0.7, stock:0, min:0},
+  {name:'LECHE CONDENSADA TUBO', price:1.9, stock:0, min:0},
+  {name:'LIMONADA FRAPE C/. HIERBA BUENA', price:2.0, stock:0, min:0},
+  {name:'LIMONADA FRAPE C/. JAMAICA', price:2.0, stock:0, min:0},
+  {name:'LIMONADA FRAPE C/. JAMAICA Y H. BUENA', price:2.2, stock:0, min:0},
+  {name:'LIMONADA FRAPE C/. LECHE COND.', price:1.8, stock:0, min:0},
+  {name:'LIMONADA CEREZO', price:2.2, stock:0, min:0},
+  {name:'MALTA POLAR X 220 CC (BOTELLA)', price:1.0, stock:0, min:0},
+  {name:'MALTA LATA X 250 ML.', price:1.25, stock:0, min:0},
+  {name:'MALTA LATA X 355 ML.', price:1.75, stock:0, min:0},
+  {name:'MALTA POLAR X 1 1/2 lts.', price:2.75, stock:0, min:0},
+  {name:'MANDOCAS', price:0.95, stock:0, min:0},
+  {name:'MINI PASTELES (PURE Y CARNE)', price:0.5, stock:0, min:0},
+  {name:'MINI PIRUETAS X 150 GRS.', price:2.75, stock:0, min:0},
+  {name:'MINI PIZZAS REDONDA', price:0.95, stock:0, min:0},
+  {name:'MINI TEQUENOS', price:0.5, stock:0, min:0},
+  {name:'MINI TEQUENOS UNIDAD', price:0.65, stock:0, min:0},
+  {name:'MINI TEQUEYOYOS', price:2.5, stock:0, min:0},
+  {name:'MONSTERS SURTIDOS', price:5.25, stock:0, min:0},
+  {name:'NESTEA LIMON Y DURAZNO (VASO GRANDE)', price:2.5, stock:0, min:0},
+  {name:'NESTEA LIMON Y DURAZNO (VASO MEDIANO)', price:2.1, stock:0, min:0},
+  {name:'NESTEA LIMON Y DURAZNO (VASO PEQUENO)', price:1.75, stock:0, min:0},
+  {name:'NUCITA BANDEJA', price:1.0, stock:0, min:0},
+  {name:'NUCITA CRUNCH X 120 GRS.', price:4.25, stock:0, min:0},
+  {name:'NUCITA CRUNCH X 35 GRS.', price:1.5, stock:0, min:0},
+  {name:'NUCITA TUBO', price:2.75, stock:0, min:0},
+  {name:'NUTELLINI BANDEJA', price:0.65, stock:0, min:0},
+  {name:'OREJONES DE GUAYABA', price:1.5, stock:0, min:0},
+  {name:'PALITO XL X 150 GRS.', price:4.0, stock:0, min:0},
+  {name:'PALITOS X 30 GRS.', price:1.0, stock:0, min:0},
+  {name:'PALITOS XTREME X 150 GRS.', price:4.5, stock:0, min:0},
+  {name:'PAN DE JAMON ZULIANO (JAMON,QUESO Y PLATANO)', price:2.75, stock:0, min:0},
+  {name:'PAN DELY CON JAMON, Q. AMARILLO Y Q. MOZZA.', price:2.75, stock:0, min:0},
+  {name:'PAN DELY CON POLLO, CARNE MECHADA O PERNIL', price:2.95, stock:0, min:0},
+  {name:'PAN DULCE X UNIDAD', price:0.25, stock:0, min:0},
+  {name:'PAN FRANCES (JAMON, QUESO BLANCO)', price:1.8, stock:0, min:0},
+  {name:'PANELADA (VASO GRANDE)', price:0.8, stock:0, min:0},
+  {name:'PANELADA (VASO MEDIANO)', price:0.55, stock:0, min:0},
+  {name:'PANELADA (VASO PEQUENO)', price:0.45, stock:0, min:0},
+  {name:'PAPAS FRITAS 140 GRS. + SALSA DE TOMATE', price:2.5, stock:0, min:0},
+  {name:'PAPAS MARGARITA POLLO', price:1.25, stock:0, min:0},
+  {name:'PAPAS MARGARITA SURTIDAS', price:1.25, stock:0, min:0},
+  {name:'PASTELES DE CARNE', price:1.5, stock:0, min:0},
+  {name:'PASTELES DE PAPA CON QUESO (PURE)', price:0.95, stock:0, min:0},
+  {name:'PASTELES DE PIZZA', price:0.95, stock:0, min:0},
+  {name:'PASTELES DE POLLO', price:1.5, stock:0, min:0},
+  {name:'PASTELES DE QUESO', price:0.95, stock:0, min:0},
+  {name:'PEPITO X 25 GRS.', price:1.0, stock:0, min:0},
+  {name:'PEPSI-COLA LATA ORIGINAL Y SIN AZUCAR', price:1.75, stock:0, min:0},
+  {name:'PEPSI-COLA X 1 1/2 LTS.', price:2.0, stock:0, min:0},
+  {name:'PEPSI-COLA X 1 LT.', price:1.5, stock:0, min:0},
+  {name:'PEPSI-COLA X 2 LTS.', price:2.75, stock:0, min:0},
+  {name:'PERROS CALIENTE', price:1.95, stock:0, min:0},
+  {name:'PINGUINOS X 2 CHOCOLATE', price:3.45, stock:0, min:0},
+  {name:'PIRULIN GDE. X 60 GRS.', price:4.25, stock:0, min:0},
+  {name:'PIRULIN MAX X 34 GRS.', price:2.2, stock:0, min:0},
+  {name:'PIRULIN PEQ. X 16 GRS.', price:1.0, stock:0, min:0},
+  {name:'PLATANITO DON JOSE JUMBO X 280 GRS.', price:5.95, stock:0, min:0},
+  {name:'PLATANITO DON JOSE MAXI X 150 GRS.', price:4.0, stock:0, min:0},
+  {name:'PLATANITO DON JOSE X 30 GRS.', price:0.75, stock:0, min:0},
+  {name:'PLATANITO DON JOSE X 80 GRS.', price:2.0, stock:0, min:0},
+  {name:'RED BULL LATA', price:3.7, stock:0, min:0},
+  {name:'ROCKSTAR BEBIDA ENERGIZANTE', price:1.5, stock:0, min:0},
+  {name:'SAMBA X 32 GRS. SURTIDAS', price:2.2, stock:0, min:0},
+  {name:'SANDWICH PAN INTG. (QUESO MOZARELLA,AMARILLO Y JAMON)', price:3.25, stock:0, min:0},
+  {name:'SANDWICH (QUESO BLANCO, CHEDDAR Y JAMON)', price:3.0, stock:0, min:0},
+  {name:'SAVOY CHOCO. C/. LECHE X 30 GRS.', price:2.5, stock:0, min:0},
+  {name:'SAVOY CHOCO. C/. LECHE X 70 GRS.', price:5.65, stock:0, min:0},
+  {name:'SERVICIO DE SALSA TARTARA', price:0.55, stock:0, min:0},
+  {name:'SPARKIES BUBALOO X 25 GRS.', price:0.95, stock:0, min:0},
+  {name:'SPEED MAX LATA', price:1.5, stock:0, min:0},
+  {name:'SUSY X 50 GRS.', price:1.75, stock:0, min:0},
+  {name:'TAPA BOCA X 1', price:0.65, stock:0, min:0},
+  {name:'TE LIPTON (DURAZNO Y LIMON)', price:2.75, stock:0, min:0},
+  {name:'TE NATURE X 1,2 lts. SURTIDOS', price:5.75, stock:0, min:0},
+  {name:'TE NATURE X 330 cc. SURTIDOS', price:2.5, stock:0, min:0},
+  {name:'TEQUENOS DE QUESO', price:1.0, stock:0, min:0},
+  {name:'TEQUEYOYOS (PLATANO,JAMON Y QUESO)', price:4.35, stock:0, min:0},
+  {name:'TIC TAC SURT.', price:2.5, stock:0, min:0},
+  {name:'TOALLAS SANITARIA ELLAS X 1', price:0.25, stock:0, min:0},
+  {name:'TORONTO X 1', price:0.95, stock:0, min:0},
+  {name:'TRIDENT MENTA X 1 UD.', price:0.2, stock:0, min:0},
+  {name:'TRIDENT X 18 PAST.', price:4.0, stock:0, min:0},
+  {name:'TRIDENT X 3', price:0.95, stock:0, min:0},
+  {name:'TRIDENT X 5', price:1.5, stock:0, min:0},
+  {name:'TRIDENT X SPLASH X 10', price:2.5, stock:0, min:0},
+  {name:'TRULULU GOMITAS SURTIDAS', price:1.75, stock:0, min:0},
+  {name:'VASO CON HIELO', price:0.7, stock:0, min:0}
+];
+
+// ---- STORAGE ----
+function save(){localStorage.setItem('kc_stock', JSON.stringify(productos.map(p=>({s:p.stock,m:p.min,c:p.costo||0,mg:p.margen!==undefined?p.margen:40}))));}
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem('kc_stock'));
+    if(d&&d.length===productos.length) d.forEach((x,i)=>{productos[i].stock=x.s;productos[i].min=x.m;productos[i].costo=x.c||0;productos[i].margen=x.mg!==undefined?x.mg:40;});
+    else if(d){
+      d.forEach((x,i)=>{if(productos[i]){productos[i].stock=x.s||0;productos[i].min=x.m||0;productos[i].costo=x.c||0;productos[i].margen=x.mg!==undefined?x.mg:40;}});
+    }
+  }catch(e){}
+}
+function saveMovs(movs){localStorage.setItem('kc_movs',JSON.stringify(movs));}
+function loadMovs(){try{return JSON.parse(localStorage.getItem('kc_movs'))||[];}catch(e){return[];}}
+
+let movimientos = loadMovs();
+load();
+
+// ---- HELPERS ----
+function getTasa(){return parseFloat(document.getElementById('tasa').value)||481.22;}
+function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function stockStatus(p){
+  if(p.stock<=0) return 'no';
+  if(p.min>0 && p.stock<=p.min) return 'min';
+  return 'ok';
+}
+function stockBadge(p){
+  const s=stockStatus(p);
+  if(s==='no') return '<span class="badge badge-no">Sin existencia</span>';
+  if(s==='min') return '<span class="badge badge-min">Existencia minima</span>';
+  return '<span class="badge badge-ok">'+p.stock+'</span>';
+}
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const tabs={venta:0,inventario:1,compras:2,reportes:3,alertas:4};
+  document.querySelectorAll('.tab')[tabs[id]].classList.add('active');
+  if(id==='inventario') renderInventario();
+  if(id==='reportes') renderReportes();
+  if(id==='alertas') renderAlertas();
+  if(id==='tarjetas') renderTarjetas();
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ---- DROPDOWN GENERICO ----
+let matched=[];
+function buildDropdown(searchId, dropId, forSale){
+  const el=document.getElementById(searchId);
+  const dd=document.getElementById(dropId);
+  el.addEventListener('input',()=>{
+    const q=norm(el.value.trim());
+    if(!q){dd.style.display='none';return;}
+    matched=productos.filter(p=>norm(p.name).includes(q)).slice(0,14);
+    if(!matched.length){dd.style.display='none';return;}
+    dd.innerHTML=matched.map((p,i)=>{
+      const s=stockStatus(p);
+      const disabled=forSale&&s==='no';
+      const sc=s==='no'?'stock-no':s==='min'?'stock-min':'stock-ok';
+      const slbl=s==='no'?'Sin existencia':s==='min'?'Min: '+p.min:'Exist: '+p.stock;
+      return `<div class="dd-item${disabled?' style="opacity:.5;cursor:not-allowed;"':''}" data-mi="${i}">
+        <span class="dname">${p.name}</span>
+        <span class="dstock ${sc}">${slbl}</span>
+        <span class="dprice">$${p.price.toFixed(2)}</span>
+      </div>`;
+    }).join('');
+    dd.querySelectorAll('.dd-item').forEach(item=>{
+      item.addEventListener('mousedown',()=>{
+        const pi=parseInt(item.getAttribute('data-mi'));
+        const prod=matched[pi];
+        if(forSale&&stockStatus(prod)==='no') return;
+        if(forSale) addToVenta(prod);
+        else addToCompra(prod);
+        dd.style.display='none';
+        el.value='';
+        el.focus();
+      });
+    });
+    dd.style.display='block';
+  });
+  el.addEventListener('blur',()=>setTimeout(()=>{dd.style.display='none';},200));
+  el.addEventListener('keydown',e=>{
+    const items=dd.querySelectorAll('.dd-item');
+    if(e.key==='Escape') dd.style.display='none';
+  });
+}
+
+// ---- VENTA ----
+let ventaCart=[];
+buildDropdown('v-search','v-dropdown',true);
+
+function addToVenta(p){
+  const ex=ventaCart.find(x=>x.idx===productos.indexOf(p));
+  if(ex){if(ex.qty<p.stock) ex.qty++;}
+  else ventaCart.push({idx:productos.indexOf(p),qty:1});
+  renderVenta();
+}
+function renderVenta(){
+  const tasa=getTasa();
+  const wrap=document.getElementById('v-cart-content');
+  const totCard=document.getElementById('v-totals-card');
+  if(!ventaCart.length){wrap.innerHTML='<div class="empty-msg">Busca un producto arriba para agregarlo.</div>';totCard.style.display='none';return;}
+  let total=0;
+  const rows=ventaCart.map((item,i)=>{
+    const p=productos[item.idx];
+    const sub=p.price*item.qty;
+    total+=sub;
+    return `<tr>
+      <td style="max-width:200px;word-break:break-word;">${p.name}</td>
+      <td>$${p.price.toFixed(2)}</td>
+      <td><span style="font-size:12px;color:#888;">(${p.stock} disp.)</span> <input type="number" class="qty-inp" value="${item.qty}" min="1" max="${p.stock}" onchange="updateVentaQty(${i},this.value)"/></td>
+      <td>$${sub.toFixed(2)}</td>
+      <td>Bs.${Math.round(sub*tasa).toLocaleString()}</td>
+      <td><button class="remove-btn" onclick="removeVenta(${i})">✕</button></td>
+    </tr>`;
+  }).join('');
+  wrap.innerHTML=`<table><thead><tr><th>Producto</th><th>Precio $</th><th>Cant.</th><th>Sub $</th><th>Sub Bs.</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  document.getElementById('v-total-usd').textContent='$'+total.toFixed(2);
+  document.getElementById('v-total-bs').textContent='Bs. '+Math.round(total*tasa).toLocaleString();
+  totCard.style.display='block';
+}
+function updateVentaQty(i,v){
+  const p=productos[ventaCart[i].idx];
+  const q=Math.min(parseInt(v)||1,p.stock);
+  if(q>0) ventaCart[i].qty=q; else ventaCart.splice(i,1);
+  renderVenta();
+}
+function removeVenta(i){ventaCart.splice(i,1);renderVenta();}
+function clearVenta(){ventaCart=[];renderVenta();}
+function confirmarVenta(){
+  if(!ventaCart.length){alert('No hay productos en la venta.');return;}
+  const tasa=getTasa();
+  let total=0;
+  const lines=ventaCart.map(item=>{
+    const p=productos[item.idx];
+    const sub=p.price*item.qty;
+    total+=sub;
+    return `<div style="padding:4px 0;border-bottom:1px solid #eee;">${p.name} x${item.qty} = $${sub.toFixed(2)}</div>`;
+  }).join('');
+  const totalBs=Math.round(total*tasa);
+  const baseImponible=(total/1.16);
+  const iva=(total-baseImponible);
+  const baseImponibleBs=Math.round(baseImponible*tasa);
+  const ivaBs=Math.round(iva*tasa);
+  document.getElementById('modal-venta-resumen').innerHTML=lines+`<div style="padding:6px 0;font-weight:700;border-top:2px solid #eee;margin-top:4px;">Total: $${total.toFixed(2)} / Bs. ${totalBs.toLocaleString()}</div>`;
+  document.getElementById('modal-iva-box').innerHTML=
+    `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+      <div><div style="font-size:11px;color:#888;text-transform:uppercase;">Base imponible</div><div style="font-weight:700;">$${baseImponible.toFixed(2)}</div><div style="font-size:12px;color:#666;">Bs. ${baseImponibleBs.toLocaleString()}</div></div>
+      <div><div style="font-size:11px;color:#888;text-transform:uppercase;">IVA 16%</div><div style="font-weight:700;">$${iva.toFixed(2)}</div><div style="font-size:12px;color:#666;">Bs. ${ivaBs.toLocaleString()}</div></div>
+      <div style="background:#1a1a2e;border-radius:8px;padding:4px 0;"><div style="font-size:11px;color:#aaa;text-transform:uppercase;">Total</div><div style="font-weight:700;color:#fff;">$${total.toFixed(2)}</div><div style="font-size:12px;color:#ccc;">Bs. ${totalBs.toLocaleString()}</div></div>
+    </div>`;
+  let alertasHtml='';
+  ventaCart.forEach(item=>{
+    const p=productos[item.idx];
+    const st=p.stock-item.qty;
+    if(st<=0) alertasHtml+=`<div style="margin-top:6px;padding:7px 12px;background:#ffe5e5;color:#cc0000;border-left:4px solid #cc0000;border-radius:6px;font-size:13px;">⛔ ${p.name} — quedara SIN EXISTENCIA</div>`;
+    else if(p.min>0&&st<=p.min) alertasHtml+=`<div style="margin-top:6px;padding:7px 12px;background:#fff4e0;color:#a06000;border-left:4px solid #e07b00;border-radius:6px;font-size:13px;">⚠️ ${p.name} — quedara en EXISTENCIA MINIMA (${st} unid.)</div>`;
+  });
+  document.getElementById('modal-alertas-stock').innerHTML=alertasHtml;
+  document.getElementById('pago-tipo').value='';
+  document.getElementById('pago-extra').innerHTML='';
+  document.getElementById('pago-vuelto').innerHTML='';
+  document.getElementById('modal-venta').classList.add('open');
+}
+
+function onPagoTipoChange(){
+  const tipo=document.getElementById('pago-tipo').value;
+  const extra=document.getElementById('pago-extra');
+  const vuelto=document.getElementById('pago-vuelto');
+  vuelto.innerHTML='';
+  const inp='width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;outline:none;';
+  const lbl='font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:5px;';
+  if(tipo==='bs'){
+    extra.innerHTML=`<div><label style="${lbl}">Monto recibido en Bs.</label><input type="number" id="pago-recibido" placeholder="0.00" step="0.01" min="0" oninput="calcVuelto()" style="${inp}"/></div>`;
+  } else if(tipo==='usd'){
+    extra.innerHTML=`<div><label style="${lbl}">Monto recibido en $</label><input type="number" id="pago-recibido" placeholder="0.00" step="0.01" min="0" oninput="calcVuelto()" style="${inp}"/></div>`;
+  } else if(tipo==='mezcla'){
+    extra.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div><label style="${lbl}">Paga en Bs.</label><input type="number" id="pago-mezcla-bs" placeholder="0.00" step="0.01" min="0" oninput="calcVuelto()" style="${inp}"/></div>
+      <div><label style="${lbl}">Paga en $</label><input type="number" id="pago-mezcla-usd" placeholder="0.00" step="0.01" min="0" oninput="calcVuelto()" style="${inp}"/></div>
+    </div>`;
+  } else if(tipo==='debito'||tipo==='credito'){
+    const lbl2=tipo==='debito'?'Débito':'Crédito';
+    const bancos=['Banco de Venezuela','Banesco','Mercantil','BBVA Provincial','Banco del Tesoro',
+      'Banco Bicentenario','BNC - Banco Nacional de Crédito','Bancaribe','Banco Occidental de Descuento (BOD)',
+      'Bancamiga','Banco Activo','Banco Exterior','Banco Venezolano de Crédito','Mibanco',
+      'Banco Agrícola de Venezuela','Banco del Libro','100% Banco','Citibank Venezuela',
+      'Delsur Banco Universal','Bancrecer','Sofitasa','Fondo Común','Plaza','Banco del Caribe (Bancaribe)',
+      'Banco Digital de los Trabajadores (BDT)'];
+    extra.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div>
+          <label style="${lbl}">Banco</label>
+          <select id="pago-banco" style="${inp}">
+            <option value="">-- Selecciona banco --</option>
+            ${bancos.map(b=>`<option value="${b}">${b}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="${lbl}">Últimos 4 dígitos — Tarjeta ${lbl2}</label>
+          <input type="text" id="pago-digitos" placeholder="0000" maxlength="4" style="${inp}letter-spacing:6px;font-weight:700;font-size:18px;text-align:center;"/>
+        </div>
+      </div>
+      <div>
+        <label style="${lbl}">Monto cobrado en Bs.</label>
+        <input type="number" id="pago-monto-tarjeta" placeholder="0.00" step="0.01" min="0" style="${inp}"/>
+      </div>`;
+  } else {
+    extra.innerHTML='';
+  }
+}
+
+function calcVuelto(){
+  const tipo=document.getElementById('pago-tipo').value;
+  const tasa=getTasa();
+  let total=0;
+  ventaCart.forEach(item=>{const p=productos[item.idx];total+=p.price*item.qty;});
+  const totalBs=total*tasa;
+  const vuelto=document.getElementById('pago-vuelto');
+  const styleOk='background:#e6f9f0;color:#1a7a4a;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;';
+  const styleFalta='background:#ffe5e5;color:#cc0000;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;';
+  if(tipo==='bs'){
+    const rec=parseFloat(document.getElementById('pago-recibido').value)||0;
+    if(!rec) return;
+    const diff=rec-totalBs;
+    vuelto.innerHTML=diff>=0
+      ?`<div style="${styleOk}">Vuelto: Bs. ${Math.round(diff).toLocaleString()} / $${(diff/tasa).toFixed(2)}</div>`
+      :`<div style="${styleFalta}">Falta: Bs. ${Math.round(Math.abs(diff)).toLocaleString()} / $${(Math.abs(diff)/tasa).toFixed(2)}</div>`;
+  } else if(tipo==='usd'){
+    const rec=parseFloat(document.getElementById('pago-recibido').value)||0;
+    if(!rec) return;
+    const diff=rec-total;
+    vuelto.innerHTML=diff>=0
+      ?`<div style="${styleOk}">Vuelto: $${diff.toFixed(2)} / Bs. ${Math.round(diff*tasa).toLocaleString()}</div>`
+      :`<div style="${styleFalta}">Falta: $${Math.abs(diff).toFixed(2)} / Bs. ${Math.round(Math.abs(diff)*tasa).toLocaleString()}</div>`;
+  } else if(tipo==='mezcla'){
+    const recBs=parseFloat(document.getElementById('pago-mezcla-bs').value)||0;
+    const recUsd=parseFloat(document.getElementById('pago-mezcla-usd').value)||0;
+    const pagado=recBs+(recUsd*tasa);
+    const diff=pagado-totalBs;
+    vuelto.innerHTML=diff>=0
+      ?`<div style="${styleOk}">Vuelto: Bs. ${Math.round(diff).toLocaleString()} / $${(diff/tasa).toFixed(2)}</div>`
+      :`<div style="${styleFalta}">Falta: Bs. ${Math.round(Math.abs(diff)).toLocaleString()} / $${(Math.abs(diff)/tasa).toFixed(2)}</div>`;
+  }
+}
+
+
+function ejecutarVenta(){
+  const tipoPago=document.getElementById('pago-tipo').value;
+  if(!tipoPago){alert('Por favor selecciona la forma de pago.');return;}
+  if((tipoPago==='debito'||tipoPago==='credito')){
+    const dig=(document.getElementById('pago-digitos').value||'').trim();
+    if(dig.length!==4||!/^[0-9]{4}$/.test(dig)){alert('Por favor ingresa los ultimos 4 digitos de la tarjeta.');return;}
+    const banco=document.getElementById('pago-banco')?document.getElementById('pago-banco').value:'';
+    if(!banco){alert('Por favor selecciona el banco.');return;}
+  }
+  const tasa=getTasa();
+  let total=0;
+  const items=ventaCart.map(item=>{
+    const p=productos[item.idx];
+    p.stock-=item.qty;
+    const sub=p.price*item.qty;
+    total+=sub;
+    return {nombre:p.name,qty:item.qty,sub};
+  });
+  save();
+  const now=new Date();
+  let pagoInfo={tipo:tipoPago};
+  if(tipoPago==='debito'||tipoPago==='credito'){
+    const digitos=document.getElementById('pago-digitos').value.trim();
+    const banco=document.getElementById('pago-banco').value.trim();
+    const montoTarjeta=parseFloat(document.getElementById('pago-monto-tarjeta').value)||Math.round(total*tasa);
+    if(!banco){alert('Por favor selecciona el banco.');return;}
+    pagoInfo.digitos=digitos;
+    pagoInfo.banco=banco;
+    pagoInfo.montoBs=montoTarjeta;
+    // Guardar en reporte de tarjetas (se conserva 6 meses)
+    let tarjRep=loadTarjetas();
+    tarjRep.push({fecha:now.toISOString(),tipo:tipoPago,banco,digitos,montoBs:montoTarjeta,totalUsd:total});
+    saveTarjetas(tarjRep);
+  }
+  movimientos.push({tipo:'venta',fecha:now.toISOString(),tasa,totalUsd:total,totalBs:Math.round(total*tasa),items,pago:pagoInfo});
+  saveMovs(movimientos);
+  closeModal('modal-venta');
+  clearVenta();
+  alert('Venta registrada. Inventario actualizado.');
+}
+
+// ---- INVENTARIO ----
+function renderInventario(){
+  const q=norm(document.getElementById('inv-filter').value||'');
+  const estado=document.getElementById('inv-estado').value;
+  const stockMinVal=document.getElementById('inv-stock-min').value;
+  const stockMaxVal=document.getElementById('inv-stock-max').value;
+  const sminMinVal=document.getElementById('inv-smin-min').value;
+  const sminMaxVal=document.getElementById('inv-smin-max').value;
+  const stockMin=stockMinVal!==''?parseInt(stockMinVal):-Infinity;
+  const stockMax=stockMaxVal!==''?parseInt(stockMaxVal):Infinity;
+  const sminMin=sminMinVal!==''?parseInt(sminMinVal):-Infinity;
+  const sminMax=sminMaxVal!==''?parseInt(sminMaxVal):Infinity;
+
+  let list=productos.filter(p=>{
+    if(q&&!norm(p.name).includes(q)) return false;
+    if(estado==='ok'&&stockStatus(p)!=='ok') return false;
+    if(estado==='min'&&stockStatus(p)!=='min') return false;
+    if(estado==='no'&&stockStatus(p)!=='no') return false;
+    if(p.stock<stockMin||p.stock>stockMax) return false;
+    if(p.min<sminMin||p.min>sminMax) return false;
+    return true;
+  });
+
+  // ── Totales globales (siempre sobre todos los productos) ──
+  const totalCostoGlobal = productos.reduce((a,p)=>{
+    const c=p.costo||0; return a+(c*p.stock);
+  },0);
+  const totalVentaGlobal = productos.reduce((a,p)=>{
+    return a+(p.price*p.stock);
+  },0);
+  const totalBsGlobal = totalCostoGlobal * getTasa();
+  const prodConCosto = productos.filter(p=>(p.costo||0)>0&&p.stock>0).length;
+  const prodSinCosto = productos.filter(p=>!(p.costo||0)&&p.stock>0).length;
+
+  const tasa=getTasa();
+  document.getElementById('inv-totales').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+      <div class="stat-card" style="border-left:4px solid #1a1a2e;">
+        <div class="slbl">Total inventario al costo</div>
+        <div class="sval">$${totalCostoGlobal.toFixed(2)}</div>
+        <div class="ssub" style="font-size:14px;font-weight:700;color:#1a1a2e;">Bs. ${Math.round(totalCostoGlobal*tasa).toLocaleString()}</div>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #1a7a4a;">
+        <div class="slbl">Total inventario al precio venta</div>
+        <div class="sval">$${totalVentaGlobal.toFixed(2)}</div>
+        <div class="ssub" style="font-size:14px;font-weight:700;color:#1a7a4a;">Bs. ${Math.round(totalVentaGlobal*tasa).toLocaleString()}</div>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #e07b00;">
+        <div class="slbl">Ganancia potencial</div>
+        <div class="sval" style="color:#e07b00;">$${(totalVentaGlobal-totalCostoGlobal).toFixed(2)}</div>
+        <div class="ssub" style="font-size:14px;font-weight:700;color:#e07b00;">Bs. ${Math.round((totalVentaGlobal-totalCostoGlobal)*tasa).toLocaleString()}</div>
+      </div>
+    </div>`;
+
+  document.getElementById('inv-resumen').innerHTML=
+    `<span style="font-size:13px;color:#888;">${list.length} producto(s) mostrado(s) de ${productos.length} en total</span>`;
+
+  const rows=list.map((p)=>{
+    const ri=productos.indexOf(p);
+    const costo=p.costo||0;
+    const margen=p.margen!==undefined?p.margen:40;
+    const precioSug=costo>0&&margen<100?(costo/(1-margen/100)):null;
+    const precioBajo=precioSug&&p.price<precioSug;
+    const diffColor=precioBajo?'color:#cc0000;font-weight:700;':'color:#1a7a4a;font-weight:700;';
+    return `<tr>
+      <td style="max-width:180px;word-break:break-word;">${p.name}</td>
+      <td>$${p.price.toFixed(2)}</td>
+      <td>${costo>0?'<span style="color:#333;">$'+costo.toFixed(2)+'</span>':'<span style="color:#bbb;">—</span>'}</td>
+      <td style="font-size:12px;text-align:center;">${margen}%</td>
+      <td style="font-size:12px;">${precioSug?'<span style="'+diffColor+'" title="'+(precioBajo?'Precio de venta por debajo del sugerido':'Precio OK')+'">$'+precioSug.toFixed(2)+(precioBajo?' ⚠️':' ✔')+'</span>':'<span style="color:#bbb;">—</span>'}</td>
+      <td><input type="number" class="qty-inp" value="${p.stock}" min="0" onchange="updateStock(${ri},this.value)" style="width:70px;"/></td>
+      <td><input type="number" class="qty-inp" value="${p.min}" min="0" onchange="updateMin(${ri},this.value)" style="width:60px;"/></td>
+      <td>${stockBadge(p)}</td>
+      <td>
+        <button class="btn btn-gray btn-sm" onclick="abrirModalEditarProducto(${ri})" style="margin-right:4px;">✏️</button>
+        <button class="btn btn-red btn-sm" onclick="abrirModalEliminar(${ri})">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('inv-table-wrap').innerHTML=list.length
+    ?`<table><thead><tr>
+        <th>Producto</th>
+        <th>Precio venta $</th>
+        <th>Costo $</th>
+        <th>Margen</th>
+        <th>Precio sugerido</th>
+        <th>Stock actual</th>
+        <th>Stock mín.</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr></thead><tbody>${rows}</tbody></table>`
+    :'<div class="empty-msg">No hay productos que coincidan con los filtros.</div>';
+}
+function updateStock(i,v){productos[i].stock=Math.max(0,parseInt(v)||0);save();renderInventario();}
+function updateMin(i,v){productos[i].min=Math.max(0,parseInt(v)||0);save();renderInventario();}
+function limpiarFiltrosInv(){
+  ['inv-filter','inv-stock-min','inv-stock-max','inv-smin-min','inv-smin-max'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('inv-estado').value='';
+  renderInventario();
+}
+function imprimirInventario(){
+  const tabla=document.getElementById('inv-table-wrap').innerHTML;
+  const filtros=document.getElementById('inv-resumen').innerHTML;
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Inventario Kaffe & Chelitas</title>
+  <style>body{font-family:Arial,sans-serif;padding:20px;color:#222;}h2{margin-bottom:6px;}p{font-size:13px;color:#666;margin-bottom:14px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}th{background:#1a1a2e;color:#fff;padding:8px 10px;text-align:left;}
+  td{padding:7px 10px;border-bottom:1px solid #eee;}tr:nth-child(even){background:#f9f9f9;}
+  .badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+  .badge-ok{background:#e6f9f0;color:#1a7a4a;}.badge-min{background:#fff4e0;color:#a06000;}.badge-no{background:#ffe5e5;color:#cc0000;}
+  button{display:none;}</style></head><body>
+  <h2>Inventario — Kaffe & Chelitas</h2><p>${filtros} — Impreso: ${new Date().toLocaleString('es-VE')}</p>
+  ${tabla}</body></html>`);
+  win.document.close();
+  win.print();
+}
+// ---- CRUD PRODUCTOS ----
+function abrirModalNuevoProducto(){
+  document.getElementById('modal-producto-title').textContent='Nuevo producto';
+  document.getElementById('mp-nombre').value='';
+  document.getElementById('mp-precio').value='';
+  document.getElementById('mp-costo').value='';
+  document.getElementById('mp-margen').value='40';
+  document.getElementById('mp-precio-sug').value='';
+  document.getElementById('mp-stock').value='';
+  document.getElementById('mp-min').value='';
+  document.getElementById('mp-idx').value='-1';
+  document.getElementById('modal-producto').classList.add('open');
+}
+function abrirModalEditarProducto(i){
+  const p=productos[i];
+  document.getElementById('modal-producto-title').textContent='Editar producto';
+  document.getElementById('mp-nombre').value=p.name;
+  document.getElementById('mp-precio').value=p.price;
+  document.getElementById('mp-costo').value=p.costo||'';
+  document.getElementById('mp-stock').value=p.stock;
+  document.getElementById('mp-min').value=p.min;
+  document.getElementById('mp-idx').value=i;
+  const margen=p.margen!==undefined?p.margen:40;
+  document.getElementById('mp-margen').value=margen;
+  calcPrecioSugeridoModal();
+  document.getElementById('modal-producto').classList.add('open');
+}
+function calcPrecioSugeridoModal(){
+  const costo=parseFloat(document.getElementById('mp-costo').value)||0;
+  const margen=parseFloat(document.getElementById('mp-margen').value)||0;
+  if(costo>0){
+    const sug=margen<100?costo/(1-margen/100):0;
+    document.getElementById('mp-precio-sug').value=sug.toFixed(2);
+  } else {
+    document.getElementById('mp-precio-sug').value='';
+  }
+}
+function guardarProducto(){
+  const nombre=document.getElementById('mp-nombre').value.trim();
+  const precio=parseFloat(document.getElementById('mp-precio').value)||0;
+  const costo=parseFloat(document.getElementById('mp-costo').value)||0;
+  const stock=parseInt(document.getElementById('mp-stock').value)||0;
+  const min=parseInt(document.getElementById('mp-min').value)||0;
+  const idx=parseInt(document.getElementById('mp-idx').value);
+  if(!nombre){alert('Por favor ingresa el nombre del producto.');return;}
+  if(precio<=0){alert('El precio de venta debe ser mayor a 0.');return;}
+  const margen=parseFloat(document.getElementById('mp-margen').value)||40;
+  if(idx===-1){
+    productos.push({name:nombre,price:precio,costo,margen,stock,min});
+  } else {
+    productos[idx].name=nombre;
+    productos[idx].price=precio;
+    productos[idx].costo=costo;
+    productos[idx].margen=margen;
+    productos[idx].stock=stock;
+    productos[idx].min=min;
+  }
+  save();
+  closeModal('modal-producto');
+  renderInventario();
+}
+function abrirModalEliminar(i){
+  document.getElementById('eliminar-idx').value=i;
+  document.getElementById('modal-eliminar-nombre').textContent=productos[i].name;
+  document.getElementById('modal-eliminar').classList.add('open');
+}
+function ejecutarEliminar(){
+  const i=parseInt(document.getElementById('eliminar-idx').value);
+  productos.splice(i,1);
+  save();
+  closeModal('modal-eliminar');
+  renderInventario();
+}
+
+// ---- COMPRAS ----
+let compraItems=[];
+buildDropdown('c-search','c-dropdown',false);
+
+function addToCompra(p){
+  const ex=compraItems.find(x=>x.idx===productos.indexOf(p));
+  if(ex) ex.qty++;
+  else compraItems.push({idx:productos.indexOf(p),qty:1});
+  renderCompraItems();
+}
+function renderCompraItems(){
+  const wrap=document.getElementById('c-items-wrap');
+  if(!compraItems.length){wrap.innerHTML='<div class="empty-msg">Agrega los productos recibidos en esta compra.</div>';return;}
+  const rows=compraItems.map((item,i)=>{
+    const p=productos[item.idx];
+    const costoActual=item.costo!==undefined?item.costo:(p.costo||0);
+    const margenItem=item.margen!==undefined?item.margen:(p.margen!==undefined?p.margen:40);
+    const precioSug=costoActual>0&&margenItem<100?(costoActual/(1-margenItem/100)).toFixed(2):'';
+    return `<div style="background:#f9f9f9;border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+      <div style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:8px;">${p.name}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;">
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:3px;">Cantidad</div>
+          <input type="number" class="qty-inp" value="${item.qty}" min="1" onchange="updateCompraQty(${i},this.value)" style="width:100%;"/>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:3px;">Costo unit. ($)</div>
+          <input type="number" placeholder="0.00" step="0.01" min="0" value="${costoActual||''}" oninput="updateCompraCostoMargen(${i},this.value,null)" style="width:100%;padding:5px 8px;border:1.5px solid #ddd;border-radius:6px;font-size:13px;outline:none;"/>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:3px;">Margen (%)</div>
+          <input type="number" placeholder="40" step="0.1" min="0" value="${margenItem}" oninput="updateCompraCostoMargen(${i},null,this.value)" style="width:100%;padding:5px 8px;border:1.5px solid #ddd;border-radius:6px;font-size:13px;outline:none;"/>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#1a7a4a;margin-bottom:3px;">Precio sugerido</div>
+          <input type="number" placeholder="—" step="0.01" value="${precioSug}" id="sug-${i}" style="width:100%;padding:5px 8px;border:1.5px solid #c8ebd8;border-radius:6px;font-size:13px;outline:none;background:#f0faf5;" readonly/>
+        </div>
+        <button class="remove-btn" onclick="removeCompraItem(${i})" style="margin-bottom:2px;">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+  wrap.innerHTML=rows;
+}
+function updateCompraCostoMargen(i, costoVal, margenVal){
+  if(costoVal!==null) compraItems[i].costo=parseFloat(costoVal)||0;
+  if(margenVal!==null) compraItems[i].margen=parseFloat(margenVal)||0;
+  renderCompraItems();
+}
+function updateCompraQty(i,v){const q=parseInt(v)||1;if(q>0)compraItems[i].qty=q;else compraItems.splice(i,1);renderCompraItems();}
+function removeCompraItem(i){compraItems.splice(i,1);renderCompraItems();}
+function clearCompra(){
+  compraItems=[];
+  ['c-proveedor','c-factura','c-monto-usd','c-monto-bs','c-tasa-dia'].forEach(id=>document.getElementById(id).value='');
+  renderCompraItems();
+}
+function confirmarCompra(){
+  const proveedor=document.getElementById('c-proveedor').value.trim();
+  const factura=document.getElementById('c-factura').value.trim();
+  const montoUsd=parseFloat(document.getElementById('c-monto-usd').value)||0;
+  const montoBs=parseFloat(document.getElementById('c-monto-bs').value)||0;
+  const tasaDia=parseFloat(document.getElementById('c-tasa-dia').value)||getTasa();
+  if(!proveedor){alert('Por favor ingresa el nombre del proveedor.');return;}
+  if(!factura){alert('Por favor ingresa el numero de factura.');return;}
+  if(!compraItems.length){alert('Agrega al menos un producto recibido.');return;}
+  let html=`<b>Proveedor:</b> ${proveedor}<br><b>Factura:</b> ${factura}<br><b>Tasa del dia:</b> ${tasaDia.toFixed(2)} Bs/$<br><b>Monto $:</b> $${montoUsd.toFixed(2)}<br><b>Monto Bs:</b> Bs. ${Math.round(montoBs).toLocaleString()}<br><br><b>Productos:</b><br>`;
+  html+=compraItems.map(item=>{
+    const p=productos[item.idx];
+    const costoStr=item.costo>0?` — Costo: $${parseFloat(item.costo).toFixed(2)}`:'';
+    return `<div style="padding:3px 0;">${p.name} x${item.qty}${costoStr}</div>`;
+  }).join('');
+  document.getElementById('modal-compra-resumen').innerHTML=html;
+  document.getElementById('modal-compra').classList.add('open');
+}
+function ejecutarCompra(){
+  const proveedor=document.getElementById('c-proveedor').value.trim();
+  const factura=document.getElementById('c-factura').value.trim();
+  const montoUsd=parseFloat(document.getElementById('c-monto-usd').value)||0;
+  const montoBs=parseFloat(document.getElementById('c-monto-bs').value)||0;
+  const tasaDia=parseFloat(document.getElementById('c-tasa-dia').value)||getTasa();
+  const items=compraItems.map(item=>{
+    const p=productos[item.idx];
+    p.stock+=item.qty;
+    if(item.costo!==undefined&&item.costo>0) p.costo=item.costo;
+    if(item.margen!==undefined) p.margen=item.margen;
+    return {nombre:p.name,qty:item.qty,costo:item.costo||0,margen:item.margen!==undefined?item.margen:40};
+  });
+  save();
+  const now=new Date();
+  movimientos.push({tipo:'compra',fecha:now.toISOString(),proveedor,factura,tasa:tasaDia,totalUsd:montoUsd,totalBs:Math.round(montoBs),items});
+  saveMovs(movimientos);
+  closeModal('modal-compra');
+  clearCompra();
+  alert('Compra registrada. Inventario actualizado.');
+}
+
+// ---- REPORTES ----
+function mesKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function mesLabel(k){const[y,m]=k.split('-');const nombres=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return nombres[parseInt(m)-1]+' '+y;}
+function populateMeses(){
+  const sel=document.getElementById('r-mes');
+  const keys=[...new Set(movimientos.map(m=>mesKey(new Date(m.fecha))))].sort().reverse();
+  const cur=mesKey(new Date());
+  if(!keys.includes(cur)) keys.unshift(cur);
+  sel.innerHTML=keys.map(k=>`<option value="${k}">${mesLabel(k)}</option>`).join('');
+}
+function renderReportes(){
+  populateMeses();
+  const mes=document.getElementById('r-mes').value||mesKey(new Date());
+  const movMes=movimientos.filter(m=>mesKey(new Date(m.fecha))===mes);
+  const ventas=movMes.filter(m=>m.tipo==='venta');
+  const compras=movMes.filter(m=>m.tipo==='compra');
+  const totalVentasUsd=ventas.reduce((a,v)=>a+v.totalUsd,0);
+  const totalVentasBs=ventas.reduce((a,v)=>a+v.totalBs,0);
+  const totalComprasUsd=compras.reduce((a,v)=>a+v.totalUsd,0);
+  const totalComprasBs=compras.reduce((a,v)=>a+v.totalBs,0);
+  document.getElementById('r-stats').innerHTML=`
+    <div class="stat-card"><div class="slbl">Ventas del mes ($)</div><div class="sval">$${totalVentasUsd.toFixed(2)}</div><div class="ssub">${ventas.length} transacciones</div></div>
+    <div class="stat-card"><div class="slbl">Ventas del mes (Bs.)</div><div class="sval">Bs.${Math.round(totalVentasBs).toLocaleString()}</div></div>
+    <div class="stat-card"><div class="slbl">Compras del mes ($)</div><div class="sval">$${totalComprasUsd.toFixed(2)}</div><div class="ssub">${compras.length} facturas</div></div>
+    <div class="stat-card"><div class="slbl">Compras del mes (Bs.)</div><div class="sval">Bs.${Math.round(totalComprasBs).toLocaleString()}</div></div>`;
+  const ventaRows=ventas.length?ventas.map((v,i)=>{
+    const d=new Date(v.fecha);
+    const hora=d.toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit'});
+    const fecha=d.toLocaleDateString('es-VE');
+    return `<tr><td>${fecha} ${hora}</td><td>${v.items.map(x=>x.nombre+' x'+x.qty).join(', ')}</td><td>$${v.totalUsd.toFixed(2)}</td><td>Bs.${v.totalBs.toLocaleString()}</td></tr>`;
+  }).join(''):'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:16px;">Sin ventas este mes</td></tr>';
+  document.getElementById('r-ventas-wrap').innerHTML=`<div class="month-label">Ventas del mes</div><table><thead><tr><th>Fecha/Hora</th><th>Productos</th><th>Total $</th><th>Total Bs.</th></tr></thead><tbody>${ventaRows}</tbody></table>`;
+  const compraRows=compras.length?compras.map(c=>{
+    const d=new Date(c.fecha);
+    const fecha=d.toLocaleDateString('es-VE');
+    return `<tr><td>${fecha}</td><td>${c.proveedor}</td><td>${c.factura}</td><td>${c.items.map(x=>x.nombre+' x'+x.qty).join(', ')}</td><td>$${c.totalUsd.toFixed(2)}</td><td>Bs.${c.totalBs.toLocaleString()}</td><td>Bs.${c.tasa.toFixed(2)}</td></tr>`;
+  }).join(''):'<tr><td colspan="7" style="text-align:center;color:#aaa;padding:16px;">Sin compras este mes</td></tr>';
+  document.getElementById('r-compras-wrap').innerHTML=`<div class="month-label">Compras del mes</div><div style="overflow-x:auto;"><table><thead><tr><th>Fecha</th><th>Proveedor</th><th>Factura</th><th>Productos</th><th>Monto $</th><th>Monto Bs.</th><th>Tasa</th></tr></thead><tbody>${compraRows}</tbody></table></div>`;
+}
+
+// ---- ALERTAS ----
+function renderAlertas(){
+  const sinExistencia=productos.filter(p=>p.stock<=0);
+  const existenciaMin=productos.filter(p=>p.min>0&&p.stock>0&&p.stock<=p.min);
+  let html='';
+  if(!sinExistencia.length&&!existenciaMin.length){
+    html='<div class="empty-msg" style="color:#1a7a4a;">Todo el inventario esta en niveles normales.</div>';
+  } else {
+    sinExistencia.forEach(p=>{html+=`<div class="alert-box alert-no">⛔ ${p.name} — PRODUCTO SIN EXISTENCIA</div>`;});
+    existenciaMin.forEach(p=>{html+=`<div class="alert-box alert-min">⚠️ ${p.name} — PRODUCTO EN EXISTENCIA MINIMA (${p.stock} unid. / min: ${p.min})</div>`;});
+  }
+  document.getElementById('alertas-wrap').innerHTML=html;
+}
+
+document.getElementById('tasa').addEventListener('input',()=>{
+  renderVenta();
+  if(document.getElementById('page-inventario').classList.contains('active')) renderInventario();
+});
+
+// ---- TARJETAS ----
+function saveTarjetas(data){
+  // Only keep last 6 months
+  const cutoff=new Date();
+  cutoff.setMonth(cutoff.getMonth()-6);
+  const filtered=data.filter(r=>new Date(r.fecha)>=cutoff);
+  localStorage.setItem('kc_tarjetas',JSON.stringify(filtered));
+}
+function loadTarjetas(){
+  try{return JSON.parse(localStorage.getItem('kc_tarjetas'))||[];}catch(e){return[];}
+}
+function populateTarjetasMeses(){
+  const sel=document.getElementById('t-mes');
+  const data=loadTarjetas();
+  const keys=[...new Set(data.map(r=>mesKey(new Date(r.fecha))))].sort().reverse();
+  const cur=mesKey(new Date());
+  if(!keys.includes(cur)) keys.unshift(cur);
+  const prev=sel.value;
+  sel.innerHTML=keys.map(k=>`<option value="${k}">${mesLabel(k)}</option>`).join('');
+  if(prev&&keys.includes(prev)) sel.value=prev;
+}
+function renderTarjetas(){
+  populateTarjetasMeses();
+  const mes=document.getElementById('t-mes').value||mesKey(new Date());
+  const tipoFiltro=document.getElementById('t-tipo').value;
+  let data=loadTarjetas().filter(r=>mesKey(new Date(r.fecha))===mes);
+  if(tipoFiltro) data=data.filter(r=>r.tipo===tipoFiltro);
+
+  const totalBs=data.reduce((a,r)=>a+r.montoBs,0);
+  const totalUsd=data.reduce((a,r)=>a+r.totalUsd,0);
+  const countDeb=data.filter(r=>r.tipo==='debito').length;
+  const countCred=data.filter(r=>r.tipo==='credito').length;
+
+  document.getElementById('t-stats').innerHTML=`
+    <div class="stat-card"><div class="slbl">Total cobrado (Bs.)</div><div class="sval">Bs.${Math.round(totalBs).toLocaleString()}</div></div>
+    <div class="stat-card"><div class="slbl">Total cobrado ($)</div><div class="sval">$${totalUsd.toFixed(2)}</div></div>
+    <div class="stat-card"><div class="slbl">Transacciones débito</div><div class="sval">${countDeb}</div></div>
+    <div class="stat-card"><div class="slbl">Transacciones crédito</div><div class="sval">${countCred}</div></div>`;
+
+  if(!data.length){
+    document.getElementById('t-table-wrap').innerHTML='<div class="empty-msg">No hay pagos con tarjeta en este período.</div>';
+    return;
+  }
+
+  // Group by day
+  const byDay={};
+  data.forEach(r=>{
+    const d=new Date(r.fecha);
+    const dia=d.toLocaleDateString('es-VE');
+    if(!byDay[dia]) byDay[dia]=[];
+    byDay[dia].push(r);
+  });
+
+  let html='<div style="overflow-x:auto;">';
+  Object.keys(byDay).sort((a,b)=>new Date(b)-new Date(a)).forEach(dia=>{
+    const regs=byDay[dia];
+    const diaTotal=regs.reduce((a,r)=>a+r.montoBs,0);
+    html+=`<div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#1a1a2e;border-radius:8px 8px 0 0;">
+        <span style="color:#fff;font-weight:700;font-size:13px;">📅 ${dia}</span>
+        <span style="color:#ccc;font-size:13px;">Total del día: <b style="color:#fff;">Bs. ${Math.round(diaTotal).toLocaleString()}</b></span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:#f7f7f7;">
+          <th style="padding:8px 10px;text-align:left;border-bottom:1.5px solid #eee;">Hora</th>
+          <th style="padding:8px 10px;text-align:left;border-bottom:1.5px solid #eee;">Tipo</th>
+          <th style="padding:8px 10px;text-align:left;border-bottom:1.5px solid #eee;">Banco</th>
+          <th style="padding:8px 10px;text-align:left;border-bottom:1.5px solid #eee;">Últimos 4</th>
+          <th style="padding:8px 10px;text-align:right;border-bottom:1.5px solid #eee;">Monto Bs.</th>
+          <th style="padding:8px 10px;text-align:right;border-bottom:1.5px solid #eee;">Monto $</th>
+        </tr></thead>
+        <tbody>
+          ${regs.map(r=>{
+            const hora=new Date(r.fecha).toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit'});
+            const tipoBadge=r.tipo==='debito'
+              ?'<span style="background:#e6f0ff;color:#1a3a8a;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;">Débito</span>'
+              :'<span style="background:#fff0e6;color:#8a3a00;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;">Crédito</span>';
+            return `<tr style="border-bottom:1px solid #f0f0f0;">
+              <td style="padding:8px 10px;">${hora}</td>
+              <td style="padding:8px 10px;">${tipoBadge}</td>
+              <td style="padding:8px 10px;">${r.banco}</td>
+              <td style="padding:8px 10px;letter-spacing:3px;font-weight:700;">****${r.digitos}</td>
+              <td style="padding:8px 10px;text-align:right;font-weight:600;">Bs. ${Math.round(r.montoBs).toLocaleString()}</td>
+              <td style="padding:8px 10px;text-align:right;">$${r.totalUsd.toFixed(2)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  });
+  html+='</div>';
+  document.getElementById('t-table-wrap').innerHTML=html;
+}
+
+function calcMontoBs(){
+  const usd=parseFloat(document.getElementById('c-monto-usd').value)||0;
+  const tasa=parseFloat(document.getElementById('c-tasa-dia').value)||parseFloat(document.getElementById('tasa').value)||481.22;
+  if(usd>0&&tasa>0){
+    document.getElementById('c-monto-bs').value=(usd*tasa).toFixed(2);
+  }
+}
+
+</script>
+</body>
+</html>
